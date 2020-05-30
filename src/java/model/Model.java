@@ -37,6 +37,7 @@ public class Model {
             
         this.repoEstudiantes.insertarEstudiante(us);
         for(Curso curso: us.getCursos()){
+            
            this.repoEstudiantesCursos.insertarEstudianteCurso(us.getId(), curso.getId());
         }
         
@@ -68,6 +69,7 @@ public class Model {
         }
     } 
     
+ 
     public List<Curso> getCursosXEstudiante(String id){
         try{
             return this.repoEstudiantesCursos.getCursoXEstudiante(id);

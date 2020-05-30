@@ -5,11 +5,14 @@
  */
 package service;
 
+import entity.Curso;
 import entity.Estudiante;
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -20,8 +23,8 @@ public class ServiceEstudiante {
      private Service service= Service.getInstance();
          private static final String INSERTAR_ESTUDIANTE = "{call insertaEstudiante(?,?,?,?)}";
     private static final String MODIFICAR_ESTUDIANTE = "{call actualizaEstudiante(?,?,?,?)}";
-    private static final String BUSCAR_ESTUDIANTE = "{?=call BUSCAR_CARRERA(?)}";
-    private static final String LISTAR_ESTUDIANTE = "{?=call todosLosEstudiantes()}";
+    private static final String BUSCAR_ESTUDIANTE = "{call getEstudiante(?)}";
+    private static final String LISTAR_ESTUDIANTE = "{call todosLosEstudiantes()}";
     private static final String ELIMINAR_ESTUDIANTE = "{call ELIMINAR_CARRERA(?)}";
     
     
@@ -67,11 +70,27 @@ public class ServiceEstudiante {
             this.service.conectar();
             call=this.service.getConnection().prepareCall(LISTAR_ESTUDIANTE);
             rs=call.executeQuery();
-            List<Estudiante> result= new ArrayList<>();
+            Map<String,Estudiante> map= new HashMap<>();
+          
             while(rs.next()){
-                result.add(new Estudiante(rs.getString("id"),rs.getString("nombre"),rs.getString("apellido"),rs.getInt("edad")));
+                String id=rs.getString("id");
+                Estudiante es=map.get(id);
+                
+                if(es==null){
+                    es=new Estudiante(id,rs.getString("nombre"),rs.getString("apellido"),rs.getInt("edad"));
+                    Curso cur= new Curso(rs.getString("cursoId"),rs.getString("descripcion"),rs.getInt("creditos"));
+                    
+                    es.getCursos().add(cur);
+                    map.put(id, es);
+                }
+                else{
+                  
+                     Curso cur= new Curso(rs.getString("cursoId"),rs.getString("descripcion"),rs.getInt("creditos"));
+                    es.getCursos().add(cur);
+                }
+                
             }
-            return result;
+           return new ArrayList<Estudiante>(map.values());
         }
         catch(Exception e){
             e.printStackTrace();
@@ -89,21 +108,35 @@ public class ServiceEstudiante {
     }
      
      
-     public Estudiante buscarEstudiante(Estudiante es) throws Exception{
+     public Estudiante buscarEstudiante(Estudiante est) throws Exception{
            CallableStatement call = null;
            ResultSet rs=null;
         try{
             this.service.conectar();
             call=this.service.getConnection().prepareCall(BUSCAR_ESTUDIANTE);
-            call.setString(1, es.getId());
+            call.setString(1, est.getId());
             rs=call.executeQuery();
-            if(rs.next()){
-               return new Estudiante(rs.getString("id"),rs.getString("nombre"),rs.getString("apellido"),
-               rs.getInt("edad")); 
+             Map<String,Estudiante> map= new HashMap<>();
+          
+            while(rs.next()){
+                String id=rs.getString("id");
+                Estudiante es=map.get(id);
+                
+                if(es==null){
+                    es=new Estudiante(id,rs.getString("nombre"),rs.getString("apellido"),rs.getInt("edad"));
+                    Curso cur= new Curso(rs.getString("cursoId"),rs.getString("descripcion"),rs.getInt("creditos"));
+                    
+                    es.getCursos().add(cur);
+                    map.put(id, es);
+                }
+                else{
+                  
+                     Curso cur= new Curso(rs.getString("cursoId"),rs.getString("descripcion"),rs.getInt("creditos"));
+                    es.getCursos().add(cur);
+                }
+                
             }
-            
-            else
-               return null;
+           return map.get(est.getId());
             
             
         }
